@@ -1,4 +1,4 @@
-# Coding Prompt: LLM-to-Mermaid Diagram Generator with MCP Agent
+# LLM-to-Mermaid Diagram Generator with MCP Agent
 
 ## Project Overview
 
