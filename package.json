@@ -1,0 +1,19 @@
+{
+  "name": "llm-mermaid-mcp",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "LLM-to-Mermaid Diagram Generator with MCP Agent",
+  "scripts": {
+    "start": "node src/server/index.js",
+    "dev": "node --watch src/server/index.js",
+    "mcp-server": "node src/mcp-server/server.js",
+    "test": "node --test tests/"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "latest",
+    "@mermaid-js/mermaid-cli": "^11.0.0",
+    "express": "^4.21.0",
+    "dotenv": "^16.4.0"
+  },
+  "devDependencies": {}
+}

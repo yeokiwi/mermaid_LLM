@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LLM Mermaid Diagram Generator</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <div id="app">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-left">
+        <svg class="logo-icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+          <path d="M2 17l10 5 10-5"/>
+          <path d="M2 12l10 5 10-5"/>
+        </svg>
+        <h1>Mermaid Diagram Generator</h1>
+      </div>
+      <div class="header-right">
+        <span id="mcp-status" class="status-badge status-connecting">MCP: Connecting...</span>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="main-content">
+      <!-- Left Panel: Chat -->
+      <div class="panel chat-panel">
+        <div class="panel-header">
+          <h2>Chat</h2>
+          <button id="clear-chat-btn" class="btn btn-ghost" title="Clear chat">Clear</button>
+        </div>
+        <div id="chat-messages" class="chat-messages">
+          <div class="welcome-message">
+            <h3>Welcome to Mermaid Diagram Generator</h3>
+            <p>Ask me to create any type of diagram, or browse your source code to generate diagrams from your codebase.</p>
+            <div class="quick-actions">
+              <button class="btn btn-outline quick-action" data-prompt="Create a flowchart showing a user login process">Flowchart: Login</button>
+              <button class="btn btn-outline quick-action" data-prompt="Create a sequence diagram for a REST API request">Sequence: API</button>
+              <button class="btn btn-outline quick-action" data-prompt="Create a class diagram for a basic e-commerce system">Class: E-Commerce</button>
+              <button class="btn btn-outline quick-action" data-prompt="List all available diagram types">List Types</button>
+            </div>
+          </div>
+        </div>
+        <div id="code-context-banner" class="code-context-banner hidden">
+          <span class="context-icon">&#128196;</span>
+          <span id="context-summary">No code context</span>
+          <button id="clear-context-btn" class="btn btn-ghost btn-sm">Clear</button>
+        </div>
+        <div class="chat-input-area">
+          <div id="selected-files-pills" class="selected-files-pills hidden"></div>
+          <div class="input-row">
+            <textarea id="chat-input" placeholder="Ask me to create a diagram..." rows="1"></textarea>
+            <button id="attach-code-btn" class="btn btn-ghost" title="Attach code context">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/>
+              </svg>
+            </button>
+            <button id="send-btn" class="btn btn-primary" title="Send message">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="22" y1="2" x2="11" y2="13"/>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Panel: Browser/Preview -->
+      <div class="panel browser-panel">
+        <div class="panel-tabs">
+          <button class="tab-btn active" data-tab="browser">Directory Browser</button>
+          <button class="tab-btn" data-tab="preview">Code Preview</button>
+        </div>
+
+        <!-- Directory Browser Tab -->
+        <div id="tab-browser" class="tab-content active">
+          <div class="path-bar">
+            <input type="text" id="path-input" class="path-input" placeholder="/path/to/directory">
+            <button id="path-go-btn" class="btn btn-ghost">Go</button>
+          </div>
+          <div id="breadcrumbs" class="breadcrumbs"></div>
+          <div class="language-filter">
+            <label><input type="checkbox" class="lang-filter" value="csharp" checked> C#</label>
+            <label><input type="checkbox" class="lang-filter" value="cpp" checked> C++</label>
+            <label><input type="checkbox" class="lang-filter" value="python" checked> Python</label>
+            <label><input type="checkbox" class="lang-filter" value="javascript" checked> JS</label>
+            <label><input type="checkbox" class="lang-filter" value="typescript" checked> TS</label>
+          </div>
+          <div id="file-tree" class="file-tree">
+            <div class="empty-state">Enter a directory path above to browse files</div>
+          </div>
+          <div id="selection-footer" class="selection-footer hidden">
+            <span id="selection-summary">0 files selected</span>
+            <button id="parse-attach-btn" class="btn btn-primary btn-sm">Parse &amp; Attach to Chat</button>
+          </div>
+        </div>
+
+        <!-- Code Preview Tab -->
+        <div id="tab-preview" class="tab-content">
+          <div id="code-preview" class="code-preview">
+            <div class="empty-state">Click a file to preview its contents</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Diagram Gallery -->
+    <div id="diagram-gallery" class="diagram-gallery hidden">
+      <div class="gallery-header">
+        <h3>Diagrams (<span id="diagram-count">0</span>)</h3>
+        <button id="toggle-gallery-btn" class="btn btn-ghost btn-sm">Collapse</button>
+      </div>
+      <div id="gallery-thumbnails" class="gallery-thumbnails"></div>
+    </div>
+  </div>
+
+  <!-- Diagram Modal -->
+  <div id="diagram-modal" class="modal hidden">
+    <div class="modal-overlay"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Diagram View</h3>
+        <button class="modal-close btn btn-ghost">&times;</button>
+      </div>
+      <div id="modal-diagram" class="modal-diagram"></div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" id="modal-download-svg">Download SVG</button>
+        <button class="btn btn-outline" id="modal-download-png">Download PNG</button>
+        <button class="btn btn-outline" id="modal-copy-syntax">Copy Syntax</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Diagram Modal -->
+  <div id="edit-modal" class="modal hidden">
+    <div class="modal-overlay"></div>
+    <div class="modal-content modal-wide">
+      <div class="modal-header">
+        <h3>Edit Diagram</h3>
+        <button class="modal-close btn btn-ghost">&times;</button>
+      </div>
+      <div class="edit-layout">
+        <textarea id="edit-syntax" class="edit-syntax" placeholder="Enter Mermaid syntax..."></textarea>
+        <div id="edit-preview" class="edit-preview">
+          <div class="empty-state">Click "Re-render" to preview</div>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-primary" id="edit-render-btn">Re-render</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading overlay -->
+  <div id="loading-overlay" class="loading-overlay hidden">
+    <div class="spinner"></div>
+    <span>Processing...</span>
+  </div>
+
+  <script src="/js/utils.js"></script>
+  <script src="/js/chat.js"></script>
+  <script src="/js/browser.js"></script>
+  <script src="/js/diagram.js"></script>
+  <script src="/js/app.js"></script>
+</body>
+</html>

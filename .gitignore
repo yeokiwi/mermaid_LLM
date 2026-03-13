@@ -1,0 +1,6 @@
+node_modules/
+.env
+output/diagrams/*.svg
+output/diagrams/*.png
+*.tmp
+.DS_Store
